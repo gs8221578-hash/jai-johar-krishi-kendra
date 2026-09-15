@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jai Johar Krishi Kendra</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f7f3;color:#172017}
+header{background:#176b36;color:white;padding:14px;text-align:center;position:sticky;top:0;z-index:5}
+h1{margin:0;font-size:21px}.wrap{max-width:1100px;margin:auto;padding:12px}
+.card{background:white;border-radius:14px;padding:14px;margin:10px 0;box-shadow:0 2px 10px #0001}
+input,select,button{width:100%;padding:11px;margin:5px 0;border:1px solid #ccd8cc;border-radius:9px;font-size:15px}
+button{background:#176b36;color:#fff;border:0;font-weight:bold}.danger{background:#b3261e}.blue{background:#1769aa}.orange{background:#d77a00}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.stat{padding:14px;border-radius:12px;background:#e9f5eb}.stat b{font-size:21px;display:block}
+nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}nav button{font-size:12px;padding:9px}
+section{display:none}.show{display:block}.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:8px;border-bottom:1px solid #ddd;text-align:left}
+.scroll{overflow:auto}.pill{display:inline-block;padding:4px 7px;border-radius:20px;background:#e8f5e9;margin:2px}.low{background:#fff0d9}.out{background:#ffdede}.ok{color:#14752e}.red{color:#b3261e}
+#login{max-width:420px;margin:70px auto}.hidden{display:none}.prod{padding:10px;border:1px solid #ddd;border-radius:10px;margin:5px 0}.cartrow{display:grid;grid-template-columns:1fr 70px 85px;gap:5px;align-items:center}
+.small{font-size:12px;color:#667}.right{text-align:right}
+</style>
+</head>
+<body>
+<div id="login" class="card">
+<h1>🌾 Jai Johar Krishi Kendra</h1>
+<p>पहली बार उपयोग करने पर अपना Username और Password बनाएं। कोई default password नहीं है।</p>
+<div id="setup">
+<input id="newUser" placeholder="नया Username">
+<input id="newPass" type="password" placeholder="नया Password (कम से कम 6 अक्षर)">
+<button onclick="createAccount()">Account बनाएं</button>
+</div>
+<div id="loginBox" class="hidden">
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+</div>
+<p id="msg" class="red"></p>
+</div>
+
+<div id="app" class="hidden">
+<header><h1>🌾 Jai Johar Krishi Kendra</h1><div id="shopTitle"></div></header>
+<div class="wrap">
+<nav>
+<button onclick="show('dash')">Dashboard</button><button onclick="show('farmers')">Kisan</button><button onclick="show('kisanKhata')">Kisan Khata</button>
+<button onclick="show('sale')">Fast Sale</button><button onclick="show('stock')">Stock</button>
+<button onclick="show('supplier')">Supplier</button><button onclick="show('purchase')">Purchase</button>
+<button onclick="show('sales')">Bills</button><button onclick="show('reports')">Reports</button><button onclick="show('expenses')">Expenses</button><button onclick="show('adjust')">Stock Adjust</button><button onclick="show('today')">आज का हिसाब</button><button onclick="show('accounts')">Payment/Khata</button><button onclick="show('returns')">Sale Return</button>
+</nav>
+
+<section id="dash" class="show">
+<div class="grid">
+<div class="stat">किसान<b id="sFarm">0</b></div><div class="stat">Products<b id="sProd">0</b></div>
+<div class="stat">आज की बिक्री<b id="sToday">₹0</b></div><div class="stat">कुल उधार<b id="sDue">₹0</b></div>
+</div>
+<div class="card"><h3>⚠️ Stock Alert</h3><div id="alerts"></div></div>
+<div class="card"><input id="globalSearch" oninput="globalSearch()" placeholder="🔎 Kisan / Product / Bill / Supplier खोजें"><div id="globalResult"></div></div>
+</section>
+
+<section id="farmers">
+<div class="card"><h3>👨‍🌾 Kisan जोड़ें</h3><div class="row">
+<input id="fName" placeholder="Kisan Name"><input id="fMobile" placeholder="Mobile">
+<input id="fVillage" placeholder="Village"><input id="fAddress" placeholder="Address">
+</div><button onclick="addFarmer()">AK ID के साथ Save</button></div>
+<div class="card"><input id="farSearch" oninput="renderFarmers()" placeholder="Kisan search"><div class="scroll"><table><thead><tr><th>ID</th><th>Kisan</th><th>Mobile</th><th>खाता</th><th></th></tr></thead><tbody id="farTable"></tbody></table></div></div>
+</section>
+
+
+<section id="kisanKhata">
+<div class="card">
+<h3>📒 Kisan का पूरा अलग खाता</h3>
+<p class="small">हर Kisan ने कौन-कौन से Product खरीदे, कितनी Quantity ली, कुल Sale, Payment और बाकी रकम यहाँ देखें।</p>
+<select id="fullKhataFarmer" onchange="renderFullKisanKhata()"></select>
+<div id="fullKhataSummary"></div>
+</div>
+<div id="fullKhataProducts"></div>
+<div id="fullKhataBills"></div>
+<div id="fullKhataPayments"></div>
+</section>
+<section id="sale">
+<div class="card"><h3>⚡ Fast Sale</h3>
+<input id="saleFarmerSearch" oninput="filterSaleFarmers()" placeholder="Kisan खोजें">
+<div id="saleFarmers"></div>
+<div id="selectedFarmer"></div>
+<input id="saleProductSearch" oninput="filterSaleProducts()" placeholder="🔎 Product search करके चुनें">
+<div id="saleProducts"></div>
+<div id="cart"></div>
+<div class="row"><select id="discType"><option value="rs">Discount ₹</option><option value="pct">Discount %</option></select><input id="discVal" type="number" value="0" oninput="renderCart()"></div>
+<div id="saleTotals"></div>
+<div class="row"><select id="saleMode"><option>Cash</option><option>UPI</option><option>Bank</option><option>Credit/Udhar</option></select><input id="salePaid" type="number" min="0" inputmode="decimal" placeholder="Payment ₹"></div>
+<button onclick="saveSale()">💾 Sale Bill Save</button>
+</div>
+</section>
+
+<section id="stock">
+<div class="card"><h3>📦 Stock Management</h3><div class="row">
+<input id="pName" placeholder="Product Name"><input id="pCompany" placeholder="Company">
+<input id="pBatch" placeholder="Batch"><input id="pExpiry" type="date">
+<input id="pQty" type="number" placeholder="Opening Qty"><input id="pBuy" type="number" placeholder="Purchase Rate">
+<input id="pSell" type="number" placeholder="Sale Rate"><input id="lowLimit" type="number" placeholder="Low Stock Limit">
+</div><button onclick="addProduct()">Product Save</button></div>
+<div class="card"><input id="stockSearch" oninput="renderStock()" placeholder="Product search"><div class="scroll"><table><thead><tr><th>Product</th><th>Batch</th><th>Qty</th><th>Buy</th><th>Sell</th><th>Expiry</th></tr></thead><tbody id="stockTable"></tbody></table></div></div>
+</section>
+
+<section id="supplier">
+<div class="card"><h3>🏪 Supplier जोड़ें</h3><div class="row">
+<input id="supName" placeholder="Supplier Name"><input id="supMobile" placeholder="Mobile">
+<input id="supCompany" placeholder="Company"><input id="supAddress" placeholder="Address">
+</div><button onclick="addSupplier()">Supplier Save</button></div>
+<div class="card"><div class="scroll"><table><thead><tr><th>ID</th><th>Supplier</th><th>Mobile</th><th>Company</th><th>खाता</th></tr></thead><tbody id="supTable"></tbody></table></div></div>
+</section>
+
+<section id="purchase">
+<div class="card"><h3>🛒 Purchase Entry</h3>
+<select id="purSupplier"></select><select id="purProduct"></select>
+<div class="row"><input id="purQty" type="number" placeholder="Qty"><input id="purRate" type="number" placeholder="Purchase Rate"></div>
+<button onclick="addPurchaseItem()">Purchase Cart में जोड़ें</button><div id="purCart"></div>
+<div class="row"><select id="purMode"><option>Cash</option><option>UPI</option><option>Bank</option><option>Credit/Udhar</option></select><input id="purPaid" type="number" placeholder="Payment ₹"></div>
+<button onclick="savePurchase()">Purchase Save + Stock बढ़ाएं</button>
+</div>
+<div class="card"><div class="scroll"><table><thead><tr><th>Bill</th><th>Date</th><th>Supplier</th><th>Total</th><th>Paid</th><th>Due</th></tr></thead><tbody id="purTable"></tbody></table></div></div>
+</section>
+
+<section id="sales">
+<div class="card"><h3>🧾 Sale Bills</h3><div class="scroll"><table><thead><tr><th>Bill</th><th>Date</th><th>Kisan</th><th>Total</th><th>Paid</th><th>Due</th><th></th></tr></thead><tbody id="salesTable"></tbody></table></div></div>
+</section>
+
+
+
+
+<section id="expenses">
+<div class="card"><h3>💸 खर्चा Entry</h3>
+<div class="row"><input id="expName" placeholder="खर्चे का नाम"><input id="expAmt" type="number" inputmode="decimal" placeholder="Amount ₹"></div>
+<div class="row"><select id="expMode"><option>Cash</option><option>UPI</option><option>Bank</option></select><input id="expNote" placeholder="Note"></div>
+<button onclick="addExpense()">खर्चा Save</button></div>
+<div class="card"><h3>खर्चा History</h3><div class="scroll"><table><thead><tr><th>Date</th><th>खर्चा</th><th>Amount</th><th>Mode</th></tr></thead><tbody id="expTable"></tbody></table></div></div>
+</section>
+<section id="adjust">
+<div class="card"><h3>📦 Stock Adjustment</h3>
+<select id="adjProduct"></select>
+<div class="row"><select id="adjType"><option value="add">Stock बढ़ाएं</option><option value="remove">Stock घटाएं</option></select><input id="adjQty" type="number" min="1" inputmode="numeric" placeholder="Quantity"></div>
+<input id="adjReason" placeholder="Reason: टूटना / खराब / गुम / correction">
+<button onclick="adjustStock()">Stock Update</button>
+</div>
+<div class="card"><h3>Adjustment History</h3><div class="scroll"><table><thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty</th><th>Reason</th></tr></thead><tbody id="adjTable"></tbody></table></div></div>
+</section>
+<section id="today">
+<div class="card"><h2>📅 आज का हिसाब</h2>
+<input id="todayDate" type="date" onchange="renderToday()" />
+<div id="todayBox"></div>
+<button onclick="printToday()">🖨️ आज का हिसाब Print / PDF</button>
+</div>
+<div class="card"><h3>📦 आज के Product Sales</h3><div class="scroll"><table><thead><tr><th>Product</th><th>Qty</th><th>Sale</th><th>Profit</th></tr></thead><tbody id="todayProducts"></tbody></table></div></div>
+</section>
+<section id="accounts">
+<div class="card"><h3>💳 Payment & Khata</h3>
+<p class="small">Kisan या Supplier चुनकर पूरा payment history देखें।</p>
+<select id="khataType" onchange="renderKhataAccounts()"><option value="farmer">👨‍🌾 Kisan</option><option value="supplier">🏪 Supplier</option></select>
+<select id="khataPerson" onchange="renderKhataAccounts()"></select>
+<div id="khataSummary"></div>
+<div class="card" id="paymentForm" style="display:none"><h3>💰 Payment Clear करें</h3>
+<div class="row"><input id="accountPayAmt" type="number" min="1" inputmode="decimal" placeholder="Payment Amount ₹"><select id="accountPayMode"><option>Cash</option><option>UPI</option><option>Bank</option></select></div>
+<input id="accountPayRef" placeholder="Reference / Note (optional)"><button onclick="saveAccountPayment()">✅ Payment Save करें</button></div>
+<div id="khataHistory"></div>
+</div>
+</section>
+<section id="returns">
+<div class="card"><h3>🔄 Sale Return</h3>
+<input id="returnBill" placeholder="Bill No. जैसे JJKK-0001" oninput="findReturnBill()">
+<div id="returnBillInfo"></div>
+</div>
+</section>
+<section id="reports">
+<div class="card"><h3>📊 Reports</h3><div id="reportBox"></div><button onclick="window.print()">🖨️ Print / PDF</button></div>
+<div class="card"><h3>💾 Backup</h3><button onclick="backup()">Backup Download</button><input type="file" id="restoreFile" accept=".json" onchange="restore(event)"></div>
+<div class="card"><h3>⚙️ Settings</h3><input id="shopName" placeholder="Shop Name"><button onclick="saveShop()">Shop Name Save</button><input id="changePass" type="password" placeholder="New Password"><button onclick="changePassword()">Password Change</button></div>
+</section>
+</div>
+</div>
+
+<script>
+const KEY='JJKK_ULTIMATE_PRO_2026';
+let d=JSON.parse(localStorage.getItem(KEY)||'null');
+let cart=[],purCart=[],currentFarmer=null;
+
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++)h^=s.charCodeAt(i),h=Math.imul(h,16777619);return (h>>>0).toString(16)}
+function save(){localStorage.setItem(KEY,JSON.stringify(d))}
+function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2})}
+function id(prefix,n){return prefix+n}
+
+function createAccount(){
+ let u=newUser.value.trim(),p=newPass.value;
+ if(!u||p.length<6){msg.textContent='Username भरें और Password कम से कम 6 अक्षर रखें';return}
+ d={account:{u,h:hash(p)},farmers:[],products:[],suppliers:[],sales:[],payments:[],purchases:[],shop:'Jai Johar Krishi Kendra',lowLimit:5,expiryDays:30,billSeq:1,purSeq:1};
+ save();setup.classList.add('hidden');loginBox.classList.remove('hidden');msg.textContent='Account बन गया। अब Login करें।';
+}
+if(d){setup.classList.add('hidden');loginBox.classList.remove('hidden')}
+function login(){
+ if(user.value===d.account.u&&hash(pass.value)===d.account.h){document.getElementById('login').classList.add('hidden');app.classList.remove('hidden');shopTitle.textContent=d.shop;renderAll()}else msg.textContent='Username या Password गलत है';
+}
+function show(x){document.querySelectorAll('section').forEach(s=>s.classList.remove('show'));document.getElementById(x).classList.add('show');renderAll()}
+
+function addFarmer(){
+ if(!fName.value.trim())return alert('Kisan name भरें');
+ let nums=d.farmers.map(x=>parseInt(x.id.replace('AK',''))).filter(Number.isFinite), n=Math.max(999,...nums)+1;
+ d.farmers.push({id:'AK'+n,name:fName.value.trim(),mobile:fMobile.value,village:fVillage.value,address:fAddress.value});save();
+ [fName,fMobile,fVillage,fAddress].forEach(x=>x.value='');renderAll();
+}
+function fStats(fid){let total=d.sales.filter(s=>s.farmerId===fid).reduce((a,s)=>a+s.total,0),paid=d.sales.filter(s=>s.farmerId===fid).reduce((a,s)=>a+s.paid,0)+d.payments.filter(p=>p.farmerId===fid).reduce((a,p)=>a+p.amount,0);return {total,paid,due:Math.max(total-paid,0),adv:Math.max(paid-total,0)}}
+function renderFarmers(){
+ let q=(farSearch?.value||'').toLowerCase();farTable.innerHTML=d.farmers.filter(f=>(f.name+' '+f.mobile+' '+f.id).toLowerCase().includes(q)).map(f=>{let s=fStats(f.id);return `<tr><td><b>${f.id}</b></td><td>${esc(f.name)}<br><span class=small>${esc(f.village)}</span></td><td>${esc(f.mobile)}</td><td>Sale ${money(s.total)}<br>Pay ${money(s.paid)}<br><b class=${s.due?'red':'ok'}>Due ${money(s.due)}</b></td><td><button onclick="khata('${f.id}')">खाता</button></td></tr>`}).join('');
+}
+function khata(fid){
+ let f=d.farmers.find(x=>x.id===fid),s=fStats(fid), rows=d.sales.filter(x=>x.farmerId===fid);
+ let html=`<div class=card><h2>${esc(f.name)} — ${f.id}</h2><p>Mobile: ${esc(f.mobile)} | Village: ${esc(f.village)}</p><div class=grid><div class=stat>Total Sale<b>${money(s.total)}</b></div><div class=stat>Total Payment<b>${money(s.paid)}</b></div><div class=stat>Udhar<b>${money(s.due)}</b></div><div class=stat>Advance<b>${money(s.adv)}</b></div></div><h3>Transaction History</h3><div class=scroll><table><tr><th>Bill</th><th>Date</th><th>Items</th><th>Total</th><th>Paid</th><th>Due</th></tr>`;
+ rows.forEach(x=>html+=`<tr><td>${x.bill}</td><td>${x.date}</td><td>${x.items.map(i=>esc(i.name)+' × '+i.qty).join('<br>')}</td><td>${money(x.total)}</td><td>${money(x.paid)}</td><td>${money(Math.max(x.total-x.paid,0))}</td></tr>`);
+ html+=`</table></div><input id="payAmt" type=number placeholder="Payment जमा ₹"><button onclick="addPayment('${fid}')">Payment जमा करें</button><button class=blue onclick="printKhata('${fid}')">Print Khata / PDF</button></div>`;
+ let w=window.open('','_blank');w.document.write('<html><body>'+html+'</body></html>');w.document.close();
+}
+function addPayment(fid){let a=Number(document.getElementById('payAmt').value);if(!a)return;d.payments.push({id:Date.now(),farmerId:fid,amount:a,date:new Date().toLocaleDateString('en-IN')});save();alert('Payment saved');location.reload()}
+function printKhata(fid){let f=d.farmers.find(x=>x.id===fid),s=fStats(fid);let w=window.open('','_blank');w.document.write(`<html><body><h2>${esc(d.shop)}</h2><h3>Kisan Khata</h3><p>${esc(f.name)} (${f.id})<br>Mobile: ${esc(f.mobile)}<br>Village: ${esc(f.village)}</p><h3>Total Sale: ${money(s.total)} | Payment: ${money(s.paid)} | Due: ${money(s.due)} | Advance: ${money(s.adv)}</h3></body></html>`);w.print()}
+
+function addProduct(){
+ if(!pName.value.trim())return alert('Product name');
+ let nums=d.products.map(x=>parseInt(x.id.replace('P',''))).filter(Number.isFinite),n=Math.max(999,...nums)+1;
+ d.products.push({id:'P'+n,name:pName.value,company:pCompany.value,batch:pBatch.value,expiry:pExpiry.value,qty:Number(pQty.value)||0,buy:Number(pBuy.value)||0,sell:Number(pSell.value)||0});
+ save();document.querySelectorAll('#stock input').forEach(x=>x.value='');renderAll();
+}
+function daysTo(date){if(!date)return 9999;return Math.ceil((new Date(date)-new Date())/86400000)}
+function renderStock(){
+ let q=(stockSearch?.value||'').toLowerCase();
+ stockTable.innerHTML=d.products.filter(p=>(p.name+' '+p.company+' '+p.batch).toLowerCase().includes(q)).map(p=>{let low=p.qty<=d.lowLimit,ex=daysTo(p.expiry)<=d.expiryDays;return `<tr class="${p.qty<=0?'out':low||ex?'low':''}"><td><b>${esc(p.name)}</b><br><span class=small>${esc(p.company)}</span></td><td>${esc(p.batch)}</td><td>${p.qty}</td><td>${money(p.buy)}</td><td>${money(p.sell)}</td><td>${p.expiry||'-'} ${ex&&p.expiry?'<b class=red>⚠️</b>':''}</td></tr>`}).join('');
+}
+function filterSaleProducts(){
+ let q=saleProductSearch.value.toLowerCase();
+ saleProducts.innerHTML=d.products.filter(p=>p.qty>0&&(p.name+' '+p.company+' '+p.batch).toLowerCase().includes(q)).slice(0,20).map(p=>`
+ <div class=prod>
+   <b>${esc(p.name)}</b><br><span class=small>${esc(p.company)} | Stock: ${p.qty} | Rate: ${money(p.sell)}</span>
+   <div class=row>
+     <input id="qty_${p.id}" type="number" min="1" max="${p.qty}" value="1" inputmode="numeric" placeholder="Qty">
+     <button type="button" onclick="addCartQty('${p.id}')">+ Add</button>
+   </div>
+ </div>`).join('') || '<p class=small>Product नहीं मिला</p>';
+}
+function addCartQty(pid){
+ let p=d.products.find(x=>x.id===pid), el=document.getElementById('qty_'+pid);
+ let q=Math.floor(Number(el?.value)||1);
+ if(!p)return;
+ if(q<1)q=1;
+ if(q>p.qty)return alert('इतना stock उपलब्ध नहीं है। Available: '+p.qty);
+ let x=cart.find(x=>x.productId===pid);
+ if(x){ if(x.qty+q>p.qty)return alert('Stock limit से ज्यादा quantity है। Available: '+p.qty); x.qty+=q; }
+ else cart.push({productId:pid,name:p.name,qty:q,rate:p.sell,buy:p.buy});
+ renderCart();
+}
+function addCart(pid){addCartQty(pid)}
+function changeCartQty(i,delta){
+ let x=cart[i],p=d.products.find(z=>z.id===x.productId);
+ if(!x||!p)return;
+ let q=x.qty+delta;
+ if(q<1){cart.splice(i,1);}
+ else if(q<=p.qty){x.qty=q;}
+ else {alert('Available stock: '+p.qty);}
+ renderCart();
+}
+function setCartQty(i,val){
+ let x=cart[i],p=d.products.find(z=>z.id===x.productId);
+ if(!x||!p)return;
+ let q=Math.floor(Number(val)||1);
+ if(q<1)q=1;
+ if(q>p.qty){alert('Available stock: '+p.qty);q=p.qty;}
+ x.qty=q; renderCart();
+}
+function renderCart(){
+ let sub=cart.reduce((a,x)=>a+x.qty*x.rate,0),dv=Number(discVal?.value)||0,
+ discount=discType?.value==='pct'?sub*dv/100:dv,total=Math.max(0,sub-discount);
+ cart.innerHTML=cart.length?cart.map((x,i)=>{
+   let p=d.products.find(z=>z.id===x.productId);
+   return `<div class=card style="margin:6px 0;padding:9px">
+     <b>${esc(x.name)}</b><br><span class=small>Rate: ${money(x.rate)} | Stock: ${p?.qty??0}</span>
+     <div class="row">
+       <button type="button" onclick="changeCartQty(${i},-1)">−</button>
+       <input type="number" min="1" max="${p?.qty??999999}" value="${x.qty}" inputmode="numeric" onchange="setCartQty(${i},this.value)">
+     </div>
+     <div><b>${money(x.qty*x.rate)}</b> <button type="button" class=danger onclick="cart.splice(${i},1);renderCart()">Remove</button></div>
+   </div>`;
+ }).join(''):'<p class=small>Cart खाली है</p>';
+ saleTotals.innerHTML=`<p>Subtotal: <b>${money(sub)}</b><br>Discount: <b>${money(discount)}</b><br>Grand Total: <b>${money(total)}</b></p>`;
+}
+function filterSaleFarmers(){let q=saleFarmerSearch.value.toLowerCase();saleFarmers.innerHTML=d.farmers.filter(f=>(f.name+' '+f.mobile+' '+f.id).toLowerCase().includes(q)).slice(0,10).map(f=>`<div class=prod onclick="selectFarmer('${f.id}')"><b>${f.id}</b> ${esc(f.name)} — ${esc(f.mobile)}</div>`).join('')}
+function selectFarmer(fid){currentFarmer=fid;let f=d.farmers.find(x=>x.id===fid),s=fStats(fid);selectedFarmer.innerHTML=`<div class=stat>Selected: <b>${esc(f.name)} (${fid})</b>Current Udhar: <b>${money(s.due)}</b></div>`}
+function saveSale(){
+ if(!currentFarmer)return alert('पहले Kisan चुनें');if(!cart.length)return alert('Product चुनें');
+ let sub=cart.reduce((a,x)=>a+x.qty*x.rate,0),dv=Number(discVal.value)||0,discount=discType.value==='pct'?sub*dv/100:dv,total=Math.max(0,sub-discount);
+ let paid=Math.min(total,Math.max(0,Number(salePaid.value)||0));if(saleMode.value==='Credit/Udhar')paid=0;
+ if(cart.some(x=>{let p=d.products.find(z=>z.id===x.productId);return p.qty<x.qty}))return alert('Stock कम है');
+ cart.forEach(x=>d.products.find(p=>p.id===x.productId).qty-=x.qty);
+ let bill='JJKK-'+String(d.billSeq++).padStart(4,'0');d.sales.push({id:Date.now(),bill,date:new Date().toLocaleDateString('en-IN'),farmerId:currentFarmer,items:cart.map(x=>({...x,total:x.qty*x.rate})),subtotal:sub,discount,total,paid,mode:saleMode.value});
+ save();printBill(d.sales[d.sales.length-1]);cart=[];salePaid.value='';renderAll();
+}
+function printBill(s){
+ let f=d.farmers.find(x=>x.id===s.farmerId),w=window.open('','_blank');
+ w.document.write(`<html><head><title>${s.bill}</title><style>body{font-family:Arial;max-width:650px;margin:auto;padding:20px}table{width:100%;border-collapse:collapse}td,th{padding:7px;border-bottom:1px solid #ddd;text-align:left}</style></head><body><h2>${esc(d.shop)}</h2><p>Bill: <b>${s.bill}</b> | Date: ${s.date}</p><p>Kisan: <b>${esc(f.name)}</b> (${f.id})<br>Mobile: ${esc(f.mobile)}</p><table><tr><th>Product</th><th>Qty</th><th>Rate</th><th>Total</th></tr>${s.items.map(i=>`<tr><td>${esc(i.name)}</td><td>${i.qty}</td><td>${money(i.rate)}</td><td>${money(i.total)}</td></tr>`).join('')}</table><h3>Subtotal: ${money(s.subtotal)}</h3><h3>Discount: ${money(s.discount)}</h3><h2>Grand Total: ${money(s.total)}</h2><p>Paid: ${money(s.paid)} | Due: ${money(Math.max(s.total-s.paid,0))}<br>Payment Mode: ${s.mode}</p><p>धन्यवाद 🙏</p></body></html>`);w.document.close();setTimeout(()=>w.print(),300)
+}
+function renderSales(){salesTable.innerHTML=d.sales.slice().reverse().map(s=>{let f=d.farmers.find(x=>x.id===s.farmerId);return `<tr><td>${s.bill}</td><td>${s.date}</td><td>${esc(f?.name||'-')}</td><td>${money(s.total)}</td><td>${money(s.paid)}</td><td>${money(Math.max(s.total-s.paid,0))}</td><td><button onclick='printBill(${JSON.stringify(s).replace(/'/g,"&#39;")})'>Print</button></td></tr>`}).join('')}
+
+function addSupplier(){if(!supName.value.trim())return alert('Supplier name');let nums=d.suppliers.map(x=>parseInt(x.id.replace('SUP',''))).filter(Number.isFinite),n=Math.max(999,...nums)+1;d.suppliers.push({id:'SUP'+n,name:supName.value,mobile:supMobile.value,company:supCompany.value,address:supAddress.value});save();document.querySelectorAll('#supplier input').forEach(x=>x.value='');renderAll()}
+function renderSuppliers(){if(!d.supplierPayments)d.supplierPayments=[];supTable.innerHTML=d.suppliers.map(s=>{let pur=d.purchases.filter(p=>p.supplierId===s.id),total=pur.reduce((a,p)=>a+p.total,0),paid=pur.reduce((a,p)=>a+p.paid,0)+d.supplierPayments.filter(x=>x.supplierId===s.id).reduce((a,p)=>a+p.amount,0);return `<tr><td>${s.id}</td><td>${esc(s.name)}</td><td>${esc(s.mobile)}</td><td>${esc(s.company)}</td><td>Purchase ${money(total)}<br>Pay ${money(paid)}<br><b class=${total-paid?'red':'ok'}>Due ${money(Math.max(total-paid,0))}</b></td></tr>`}).join('');purSupplier.innerHTML='<option value="">Supplier चुनें</option>'+d.suppliers.map(s=>`<option value="${s.id}">${s.id} - ${esc(s.name)}</option>`).join('')}
+function renderPurchaseProducts(){purProduct.innerHTML='<option value="">Product चुनें</option>'+d.products.map(p=>`<option value="${p.id}">${esc(p.name)} | Stock ${p.qty}</option>`).join('')}
+function addPurchaseItem(){let p=d.products.find(x=>x.id===purProduct.value),q=Number(purQty.value),r=Number(purRate.value);if(!p||q<=0||r<0)return alert('Supplier, Product, Qty और Rate भरें');purCart.push({productId:p.id,name:p.name,qty:q,rate:r,total:q*r});renderPurCart()}
+function renderPurCart(){purCartBox=purCart.map((x,i)=>`<div class=prod>${esc(x.name)} × ${x.qty} × ${money(x.rate)} = <b>${money(x.total)}</b> <button class=danger onclick="purCart.splice(${i},1);renderPurCart()">X</button></div>`).join('');purCartBox&&(document.getElementById('purCart').innerHTML=purCartBox)}
+function savePurchase(){if(!purSupplier.value||!purCart.length)return alert('Supplier और products चुनें');let total=purCart.reduce((a,x)=>a+x.total,0),paid=Math.min(total,Math.max(0,Number(purPaid.value)||0));purCart.forEach(x=>{let p=d.products.find(z=>z.id===x.productId);p.qty+=x.qty;p.buy=x.rate});let bill='PUR-'+String(d.purSeq++).padStart(4,'0');d.purchases.push({id:Date.now(),bill,date:new Date().toLocaleDateString('en-IN'),supplierId:purSupplier.value,items:[...purCart],total,paid,mode:purMode.value});save();purCart=[];purPaid.value='';renderAll();alert('Purchase saved')}
+function renderPurchases(){purTable.innerHTML=d.purchases.slice().reverse().map(p=>{let s=d.suppliers.find(x=>x.id===p.supplierId);return `<tr><td>${p.bill}</td><td>${p.date}</td><td>${esc(s?.name||'-')}</td><td>${money(p.total)}</td><td>${money(p.paid)}</td><td>${money(Math.max(p.total-p.paid,0))}</td></tr>`}).join('')}
+
+
+function renderKhataAccounts(){
+ let type=khataType.value, oldId=khataPerson.value, arr=type==='farmer'?d.farmers:d.suppliers;
+ khataPerson.innerHTML='<option value="">Select '+(type==='farmer'?'Kisan':'Supplier')+'</option>'+arr.map(x=>`<option value="${x.id}">${x.id} - ${esc(x.name)}</option>`).join('');
+ if(arr.some(x=>x.id===oldId)) khataPerson.value=oldId;
+ let idv=khataPerson.value;
+ paymentForm.style.display=idv?'block':'none';
+ if(!idv){khataSummary.innerHTML=arr.length?'<p class="small">Kisan/Supplier चुनें, फिर payment clear करें।</p>':'<p class="small">अभी कोई '+(type==='farmer'?'Kisan':'Supplier')+' नहीं है। पहले entry करें।</p>';khataHistory.innerHTML='';return;}
+ if(type==='farmer'){
+   let f=d.farmers.find(x=>x.id===idv), st=fStats(idv), pays=d.payments.filter(x=>x.farmerId===idv);
+   khataSummary.innerHTML=`<div class=grid><div class=stat>Total Sale<b>${money(st.total)}</b></div><div class=stat>Payment<b>${money(st.paid)}</b></div><div class="stat red">Udhar<b>${money(st.due)}</b></div><div class=stat>Advance<b>${money(st.adv)}</b></div></div>`;
+   khataHistory.innerHTML='<h3>📋 Kisan Payment History</h3><div class=scroll><table><tr><th>Date</th><th>Amount</th><th>Mode</th><th>Reference</th></tr>'+pays.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${money(x.amount)}</td><td>${esc(x.mode||'-')}</td><td>${esc(x.ref||'')}</td></tr>`).join('')+'</table></div>';
+ }else{
+   let pur=d.purchases.filter(x=>x.supplierId===idv), total=pur.reduce((a,x)=>a+x.total,0), purchasePaid=pur.reduce((a,x)=>a+x.paid,0), sp=(d.supplierPayments||[]).filter(x=>x.supplierId===idv), extra=sp.reduce((a,x)=>a+x.amount,0), paid=purchasePaid+extra;
+   khataSummary.innerHTML=`<div class=grid><div class=stat>Total Purchase<b>${money(total)}</b></div><div class=stat>Payment<b>${money(paid)}</b></div><div class="stat red">Supplier Due<b>${money(Math.max(total-paid,0))}</b></div><div class=stat>Advance<b>${money(Math.max(paid-total,0))}</b></div></div>`;
+   khataHistory.innerHTML='<h3>📋 Supplier Payment & Purchase History</h3><div class=scroll><table><tr><th>Date</th><th>Type</th><th>Bill/Ref</th><th>Amount</th><th>Mode</th></tr>'+pur.map(x=>`<tr><td>${x.date}</td><td>Purchase</td><td>${x.bill}</td><td>${money(x.paid)}</td><td>${esc(x.mode||'-')}</td></tr>`).join('')+sp.map(x=>`<tr><td>${x.date}</td><td>Payment</td><td>${esc(x.ref||'-')}</td><td>${money(x.amount)}</td><td>${esc(x.mode||'-')}</td></tr>`).join('')+'</table></div>';
+ }
+}
+function saveAccountPayment(){
+ let type=khataType.value,idv=khataPerson.value,a=Number(accountPayAmt.value)||0;
+ if(!idv||a<=0)return alert('Person और payment amount भरें');
+ if(type==='farmer'){
+   let st=fStats(idv); if(a>st.due && st.due>0 && !confirm('Payment Due से ज्यादा है। Advance के रूप में save करें?'))return;
+   d.payments.push({id:Date.now(),farmerId:idv,amount:a,date:new Date().toLocaleDateString('en-IN'),mode:accountPayMode.value,ref:accountPayRef.value});
+ }else{
+   if(!d.supplierPayments)d.supplierPayments=[];
+   let pur=d.purchases.filter(x=>x.supplierId===idv),total=pur.reduce((z,x)=>z+x.total,0),already=pur.reduce((z,x)=>z+x.paid,0)+d.supplierPayments.filter(x=>x.supplierId===idv).reduce((z,x)=>z+x.amount,0);
+   if(a>Math.max(total-already,0)&&total>already&&!confirm('Payment Due से ज्यादा है। Advance के रूप में save करें?'))return;
+   d.supplierPayments.push({id:Date.now(),supplierId:idv,amount:a,date:new Date().toLocaleDateString('en-IN'),mode:accountPayMode.value,ref:accountPayRef.value});
+ }
+ save();accountPayAmt.value='';accountPayRef.value='';renderAll();alert('Payment successfully saved');
+}
+function findReturnBill(){
+ let b=returnBill.value.trim().toUpperCase(), s=d.sales.find(x=>x.bill===b);
+ if(!s){returnBillInfo.innerHTML=b?'<p class=red>Bill नहीं मिला</p>':'';return}
+ let f=d.farmers.find(x=>x.id===s.farmerId);
+ returnBillInfo.innerHTML=`<div class=card><b>${s.bill}</b> | ${esc(f?.name||'')} | Total ${money(s.total)}
+ <div>${s.items.map((it,i)=>`<div class=prod><b>${esc(it.name)}</b> | Sold Qty: ${it.qty} | Rate: ${money(it.rate)}
+ <input id="ret${i}" type=number min=0 max="${it.qty}" placeholder="Return Qty">
+ </div>`).join('')}</div><button onclick="processReturn('${s.id}')">Return Save + Stock वापस</button></div>`;
+}
+function processReturn(sid){
+ let s=d.sales.find(x=>String(x.id)===String(sid)); if(!s)return;
+ let refund=0, any=false;
+ s.items.forEach((it,i)=>{let q=Math.max(0,Math.min(it.qty,Number(document.getElementById('ret'+i)?.value)||0));if(q){any=true;it.qty-=q;refund+=q*it.rate;let p=d.products.find(x=>x.id===it.productId);if(p)p.qty+=q;}});
+ if(!any)return alert('Return quantity डालें');
+ s.items=s.items.filter(x=>x.qty>0);
+ s.subtotal=Math.max(0,s.subtotal-refund); s.total=Math.max(0,s.total-refund);
+ s.paid=Math.min(s.paid,s.total);
+ d.sales=d.sales.filter(x=>x.items.length||x.id!==s.id);
+ d.sales.push({...s,lastReturn:new Date().toLocaleDateString('en-IN')});
+ save(); alert('Sale return saved. Stock वापस हो गया।'); returnBill.value='';returnBillInfo.innerHTML='';renderAll();
+}
+
+function localISODate(){
+ let z=new Date(); return new Date(z.getTime()-z.getTimezoneOffset()*60000).toISOString().slice(0,10);
+}
+function saleDateISO(s){
+ let parts=(s.date||'').split('/');
+ if(parts.length===3){let [dd,mm,yy]=parts;return `${yy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;}
+ return s.date;
+}
+function renderToday(){
+ if(!todayDate.value)todayDate.value=localISODate();
+ let dt=todayDate.value, ss=d.sales.filter(s=>saleDateISO(s)===dt), pp=d.purchases.filter(p=>{let x=p.date.split('/');return x.length===3?`${x[2]}-${String(x[1]).padStart(2,'0')}-${String(x[0]).padStart(2,'0')}`===dt:false});
+ let sale=ss.reduce((a,x)=>a+x.total,0), purchase=pp.reduce((a,x)=>a+x.total,0);
+ let cash=ss.filter(x=>x.mode==='Cash').reduce((a,x)=>a+x.paid,0),upi=ss.filter(x=>x.mode==='UPI').reduce((a,x)=>a+x.paid,0),bank=ss.filter(x=>x.mode==='Bank').reduce((a,x)=>a+x.paid,0),credit=ss.reduce((a,x)=>a+Math.max(x.total-x.paid,0),0);
+ let cost=ss.reduce((a,x)=>a+x.items.reduce((z,i)=>z+i.qty*i.buy,0),0),profit=sale-cost;
+ todayBox.innerHTML=`<div class=grid>
+ <div class=stat>कुल बिक्री<b>${money(sale)}</b></div><div class=stat>Cash<b>${money(cash)}</b></div>
+ <div class=stat>UPI<b>${money(upi)}</b></div><div class=stat>Bank<b>${money(bank)}</b></div>
+ <div class=stat>Udhar<b>${money(credit)}</b></div><div class=stat>Purchase<b>${money(purchase)}</b></div>
+ <div class=stat>अनुमानित Profit<b>${money(profit)}</b></div><div class=stat>Bills<b>${ss.length}</b></div>
+ </div>`;
+ let map={}; ss.forEach(x=>x.items.forEach(i=>{if(!map[i.productId])map[i.productId]={name:i.name,qty:0,sale:0,buy:0};map[i.productId].qty+=i.qty;map[i.productId].sale+=i.qty*i.rate;map[i.productId].buy+=i.qty*i.buy;}));
+ todayProducts.innerHTML=Object.values(map).map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty}</td><td>${money(x.sale)}</td><td>${money(x.sale-x.buy)}</td></tr>`).join('')||'<tr><td colspan=4>No sales</td></tr>';
+}
+function printToday(){
+ let box=todayBox.innerHTML,w=window.open('','_blank');w.document.write(`<html><body><h2>${esc(d.shop)}</h2><h3>आज का हिसाब — ${todayDate.value}</h3>${box}</body></html>`);w.document.close();setTimeout(()=>w.print(),300);
+}
+
+function addExpense(){
+ let name=expName.value.trim(),amt=Number(expAmt.value)||0;
+ if(!name||amt<=0)return alert('Expense name और amount भरें');
+ if(!d.expenses)d.expenses=[];
+ d.expenses.push({id:Date.now(),date:new Date().toLocaleDateString('en-IN'),name,amount:amt,mode:expMode.value,note:expNote.value});
+ save();expName.value='';expAmt.value='';expNote.value='';renderAll();
+}
+function renderExpenses(){
+ if(!d.expenses)d.expenses=[];
+ expTable.innerHTML=d.expenses.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${esc(x.name)}<br><span class=small>${esc(x.note||'')}</span></td><td>${money(x.amount)}</td><td>${x.mode}</td></tr>`).join('')||'<tr><td colspan=4>No expense</td></tr>';
+}
+function renderAdjust(){
+ adjProduct.innerHTML='<option value="">Product चुनें</option>'+d.products.map(p=>`<option value="${p.id}">${esc(p.name)} | Stock ${p.qty}</option>`).join('');
+ if(!d.adjustments)d.adjustments=[];
+ adjTable.innerHTML=d.adjustments.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${esc(x.productName)}</td><td>${x.type==='add'?'Add':'Remove'}</td><td>${x.qty}</td><td>${esc(x.reason)}</td></tr>`).join('')||'<tr><td colspan=5>No adjustment</td></tr>';
+}
+function adjustStock(){
+ let p=d.products.find(x=>x.id===adjProduct.value),q=Math.floor(Number(adjQty.value)||0);
+ if(!p||q<1)return alert('Product और quantity भरें');
+ if(adjType.value==='remove'&&q>p.qty)return alert('Available stock: '+p.qty);
+ p.qty += adjType.value==='add'?q:-q;
+ if(!d.adjustments)d.adjustments=[];
+ d.adjustments.push({id:Date.now(),date:new Date().toLocaleDateString('en-IN'),productId:p.id,productName:p.name,type:adjType.value,qty:q,reason:adjReason.value||'Adjustment'});
+ save();adjQty.value='';adjReason.value='';renderAll();alert('Stock updated');
+}
+function renderAlerts(){let a=d.products.filter(p=>p.qty<=d.lowLimit||daysTo(p.expiry)<=d.expiryDays&&p.expiry);alerts.innerHTML=a.length?a.map(p=>`<div class="pill ${p.qty<=0?'out':'low'}">${esc(p.name)} — Stock ${p.qty}${p.qty<=d.lowLimit?' ⚠️ Low':''}${p.expiry&&daysTo(p.expiry)<=d.expiryDays?' ⏰ Expiry':''}</div>`).join(''):'<span class=ok>कोई alert नहीं</span>'}
+function renderReports(){let sale=d.sales.reduce((a,s)=>a+s.total,0),cost=d.sales.reduce((a,s)=>a+s.items.reduce((z,i)=>z+i.qty*i.buy,0),0),profit=sale-cost, purchase=d.purchases.reduce((a,p)=>a+p.total,0),expense=(d.expenses||[]).reduce((a,x)=>a+x.amount,0),net=profit-expense;reportBox.innerHTML=`Total Sale: <b>${money(sale)}</b><br>Total Purchase: <b>${money(purchase)}</b><br>Gross Profit: <b>${money(profit)}</b><br>Expenses: <b>${money(expense)}</b><br>Estimated Net Profit: <b>${money(net)}</b><br>Total Bills: <b>${d.sales.length}</b><br>Total Products: <b>${d.products.length}</b>`}
+function renderDash(){sFarm.textContent=d.farmers.length;sProd.textContent=d.products.length;let today=new Date().toLocaleDateString('en-IN');sToday.textContent=money(d.sales.filter(s=>s.date===today).reduce((a,s)=>a+s.total,0));sDue.textContent=money(d.farmers.reduce((a,f)=>a+fStats(f.id).due,0))}
+function globalSearch(){let q=(globalSearch.value||'').toLowerCase();if(!q){globalResult.innerHTML='';return}let a=[];d.farmers.forEach(f=>{if((f.name+' '+f.mobile+' '+f.id).toLowerCase().includes(q))a.push('👨‍🌾 '+f.id+' '+f.name+' — Due '+money(fStats(f.id).due))});d.products.forEach(p=>{if((p.name+' '+p.company+' '+p.batch).toLowerCase().includes(q))a.push('📦 '+p.name+' — Stock '+p.qty)});d.sales.forEach(s=>{if(s.bill.toLowerCase().includes(q))a.push('🧾 '+s.bill+' — '+money(s.total))});d.suppliers.forEach(s=>{if((s.name+' '+s.mobile+' '+s.id).toLowerCase().includes(q))a.push('🏪 '+s.id+' '+s.name)});globalResult.innerHTML=a.slice(0,30).map(x=>'<div class=prod>'+esc(x)+'</div>').join('')||'No result'}
+function backup(){let x={...d,account:undefined};let b=new Blob([JSON.stringify(x)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='Jai_Johar_Krishi_Kendra_Backup.json';a.click()}
+function restore(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);x.account=d.account;d=x;save();alert('Backup restore हो गया');location.reload()}catch{alert('Invalid backup')}};r.readAsText(f)}
+function saveShop(){d.shop=shopName.value.trim()||d.shop;save();shopTitle.textContent=d.shop;alert('Saved')}
+function changePassword(){let p=changePass.value;if(p.length<6)return alert('Password कम से कम 6 अक्षर');d.account.h=hash(p);save();changePass.value='';alert('Password changed')}
+
+function renderFullKisanKhata(){
+  let sel=document.getElementById('fullKhataFarmer');
+  if(!sel)return;
+  let old=sel.value;
+  sel.innerHTML='<option value="">Kisan चुनें</option>'+d.farmers.map(f=>`<option value="${f.id}">${f.id} - ${esc(f.name)} ${f.mobile?'('+esc(f.mobile)+')':''}</option>`).join('');
+  if(d.farmers.some(f=>f.id===old))sel.value=old;
+  let fid=sel.value;
+  let sumBox=document.getElementById('fullKhataSummary'), prodBox=document.getElementById('fullKhataProducts'),
+      billBox=document.getElementById('fullKhataBills'), payBox=document.getElementById('fullKhataPayments');
+  if(!fid){
+    sumBox.innerHTML='<p class="small">ऊपर से Kisan चुनें।</p>';
+    prodBox.innerHTML=billBox.innerHTML=payBox.innerHTML='';
+    return;
+  }
+  let f=d.farmers.find(x=>x.id===fid), sales=d.sales.filter(x=>x.farmerId===fid);
+  let payments=d.payments.filter(x=>x.farmerId===fid);
+  let total=sales.reduce((a,x)=>a+x.total,0);
+  let billPaid=sales.reduce((a,x)=>a+(Number(x.paid)||0),0);
+  let extraPaid=payments.reduce((a,x)=>a+(Number(x.amount)||0),0);
+  let paid=billPaid+extraPaid, due=Math.max(total-paid,0), adv=Math.max(paid-total,0);
+  sumBox.innerHTML=`<div class="card"><h3>👨‍🌾 ${esc(f.name)} — <b>${f.id}</b></h3>
+  <p>Mobile: ${esc(f.mobile||'-')} | Village: ${esc(f.village||'-')} | Address: ${esc(f.address||'-')}</p>
+  <div class="grid">
+  <div class="stat">कुल खरीद / Sale<b>${money(total)}</b></div>
+  <div class="stat">कुल Payment<b>${money(paid)}</b></div>
+  <div class="stat ${due?'red':'ok'}">बाकी / Udhar<b>${money(due)}</b></div>
+  <div class="stat">Advance<b>${money(adv)}</b></div>
+  <div class="stat">कुल Bills<b>${sales.length}</b></div>
+  <div class="stat">अलग Payments<b>${payments.length}</b></div>
+  </div>
+  <button onclick="openKisanKhataPrint('${fid}')">🖨️ पूरा Kisan Khata Print / PDF</button>
+  </div>`;
+
+  let map={};
+  sales.forEach(s=>s.items.forEach(it=>{
+    let key=it.productId||it.name;
+    if(!map[key])map[key]={name:it.name,qty:0,total:0};
+    map[key].qty+=Number(it.qty)||0;
+    map[key].total+=Number(it.total)||((Number(it.qty)||0)*(Number(it.rate)||0));
+  }));
+  let products=Object.values(map);
+  prodBox.innerHTML=`<div class="card"><h3>🛒 Kisan ने कौन-कौन से Product खरीदे</h3>
+  <div class="scroll"><table><thead><tr><th>Product</th><th>कुल Qty</th><th>कुल Amount</th></tr></thead><tbody>
+  ${products.length?products.map(x=>`<tr><td>${esc(x.name)}</td><td><b>${x.qty}</b></td><td>${money(x.total)}</td></tr>`).join(''):'<tr><td colspan="3">अभी कोई product purchase नहीं</td></tr>'}
+  </tbody></table></div></div>`;
+
+  billBox.innerHTML=`<div class="card"><h3>🧾 पूरा Bill हिसाब</h3>
+  <div class="scroll"><table><thead><tr><th>Date</th><th>Bill</th><th>Products</th><th>Bill</th><th>Paid</th><th>बाकी</th></tr></thead><tbody>
+  ${sales.slice().reverse().map(x=>{
+    let bdue=Math.max((Number(x.total)||0)-(Number(x.paid)||0),0);
+    return `<tr><td>${x.date}</td><td>${x.bill}</td><td>${x.items.map(i=>esc(i.name)+' × '+i.qty).join('<br>')}</td><td>${money(x.total)}</td><td>${money(x.paid)}</td><td class="${bdue?'red':'ok'}">${money(bdue)}</td></tr>`;
+  }).join('')||'<tr><td colspan="6">No bills</td></tr>'}
+  </tbody></table></div></div>`;
+
+  payBox.innerHTML=`<div class="card"><h3>💰 Payment History</h3>
+  <div class="scroll"><table><thead><tr><th>Date</th><th>Amount</th><th>Mode</th><th>Reference</th></tr></thead><tbody>
+  ${payments.slice().reverse().map(x=>`<tr><td>${x.date}</td><td>${money(x.amount)}</td><td>${esc(x.mode||'-')}</td><td>${esc(x.ref||'-')}</td></tr>`).join('')||'<tr><td colspan="4">No separate payment</td></tr>'}
+  </tbody></table></div></div>`;
+}
+function openKisanKhataPrint(fid){
+  let f=d.farmers.find(x=>x.id===fid); if(!f)return;
+  let sales=d.sales.filter(x=>x.farmerId===fid), payments=d.payments.filter(x=>x.farmerId===fid);
+  let total=sales.reduce((a,x)=>a+x.total,0), paid=sales.reduce((a,x)=>a+(Number(x.paid)||0),0)+payments.reduce((a,x)=>a+x.amount,0);
+  let due=Math.max(total-paid,0),adv=Math.max(paid-total,0), map={};
+  sales.forEach(s=>s.items.forEach(i=>{let k=i.productId||i.name;if(!map[k])map[k]={name:i.name,qty:0,total:0};map[k].qty+=i.qty;map[k].total+=i.total||i.qty*i.rate;}));
+  let w=window.open('','_blank');
+  w.document.write(`<html><head><title>Kisan Khata</title><style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:7px;text-align:left}.box{padding:10px;border:1px solid #ddd;margin:8px 0}</style></head><body>
+  <h2>${esc(d.shop)}</h2><h3>Kisan Account Summary</h3>
+  <p><b>${esc(f.name)}</b> — ${f.id}<br>Mobile: ${esc(f.mobile||'-')}<br>Village: ${esc(f.village||'-')}</p>
+  <div class="box">Total Sale: ${money(total)} | Payment: ${money(paid)} | <b>बाकी: ${money(due)}</b> | Advance: ${money(adv)}</div>
+  <h3>Product Purchase</h3><table><tr><th>Product</th><th>Qty</th><th>Amount</th></tr>${Object.values(map).map(x=>`<tr><td>${esc(x.name)}</td><td>${x.qty}</td><td>${money(x.total)}</td></tr>`).join('')}</table>
+  <h3>Bill History</h3><table><tr><th>Date</th><th>Bill</th><th>Total</th><th>Paid</th><th>Due</th></tr>${sales.map(x=>`<tr><td>${x.date}</td><td>${x.bill}</td><td>${money(x.total)}</td><td>${money(x.paid)}</td><td>${money(Math.max(x.total-x.paid,0))}</td></tr>`).join('')}</table>
+  <script>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+function renderAll(){if(!d.expenses)d.expenses=[];if(!d.adjustments)d.adjustments=[];renderFarmers();renderStock();renderAlerts();filterSaleFarmers();filterSaleProducts();renderSales();renderSuppliers();renderPurchaseProducts();renderPurCart();renderPurchases();renderReports();renderDash();renderCart();renderKhataAccounts();renderFullKisanKhata();renderToday();renderExpenses();renderAdjust();shopTitle.textContent=d.shop}
+</script>
+</body></html>
